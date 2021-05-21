@@ -1,179 +1,156 @@
-package com.sedmelluq.discord.lavaplayer.source.youtube;
+package com.sedmelluq.discord.lavaplayer.source.youtube
 
-import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
-import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
-import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser;
-import com.sedmelluq.discord.lavaplayer.tools.http.ExtendedHttpConfigurable;
-import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
-import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
-import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterfaceManager;
-import com.sedmelluq.discord.lavaplayer.track.AudioItem;
-import com.sedmelluq.discord.lavaplayer.track.AudioReference;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
-
-import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterfaceManager
+import com.sedmelluq.discord.lavaplayer.tools.http.ExtendedHttpConfigurable
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack
+import com.sedmelluq.discord.lavaplayer.track.AudioItem
+import org.apache.http.client.utils.URIBuilder
+import org.apache.http.client.methods.HttpGet
+import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools
+import org.jsoup.Jsoup
+import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools
+import com.sedmelluq.discord.lavaplayer.track.AudioReference
+import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist
+import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools
+import kotlin.Throws
+import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.slf4j.LoggerFactory
+import java.io.IOException
+import java.lang.RuntimeException
+import java.nio.charset.StandardCharsets
+import java.util.function.Function
+import java.util.regex.Pattern
 
 /**
  * Handles processing YouTube searches.
  */
-public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
-  private static final Logger log = LoggerFactory.getLogger(YoutubeSearchProvider.class);
+class YoutubeSearchProvider : YoutubeSearchResultLoader {
+    private val httpInterfaceManager: HttpInterfaceManager = HttpClientTools.createCookielessThreadLocalManager()
+    private val polymerInitialDataRegex =
+        Pattern.compile("(window\\[\"ytInitialData\"]|var ytInitialData)\\s*=\\s*(.*);")
 
-  private static final long LIVE_STREAM_DURATION = Long.MAX_VALUE;
-  private static final String WATCH_URL_PREFIX = "https://www.youtube.com/watch?v=";
-  private final HttpInterfaceManager httpInterfaceManager;
-  private final Pattern polymerInitialDataRegex = Pattern.compile("(window\\[\"ytInitialData\"]|var ytInitialData)\\s*=\\s*(.*);");
+    override fun getHttpConfiguration(): ExtendedHttpConfigurable = httpInterfaceManager
 
-  public YoutubeSearchProvider() {
-    this.httpInterfaceManager = HttpClientTools.createCookielessThreadLocalManager();
-    httpInterfaceManager.setHttpContextFilter(new BaseYoutubeHttpContextFilter());
-  }
-
-  public ExtendedHttpConfigurable getHttpConfiguration() {
-    return httpInterfaceManager;
-  }
-
-  /**
-   * @param query Search query.
-   * @return Playlist of the first page of results.
-   */
-  @Override
-  public AudioItem loadSearchResult(String query, Function<AudioTrackInfo, AudioTrack> trackFactory) {
-    log.debug("Performing a search with query {}", query);
-
-    try (HttpInterface httpInterface = httpInterfaceManager.getInterface()) {
-      URI url = new URIBuilder("https://www.youtube.com/results")
-              .addParameter("search_query", query)
-              .addParameter("hl", "en")
-              .addParameter("persist_hl", "1").build();
-
-      try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(url))) {
-        HttpClientTools.assertSuccessWithContent(response, "search response");
-
-        Document document = Jsoup.parse(response.getEntity().getContent(), StandardCharsets.UTF_8.name(), "");
-        return extractSearchResults(document, query, trackFactory);
-      }
-    } catch (Exception e) {
-      throw ExceptionTools.wrapUnfriendlyExceptions(e);
-    }
-  }
-
-  private AudioItem extractSearchResults(Document document, String query,
-                                         Function<AudioTrackInfo, AudioTrack> trackFactory) {
-
-    List<AudioTrack> tracks = new ArrayList<>();
-    Elements resultsSelection = document.select("#page > #content #results");
-    if (!resultsSelection.isEmpty()) {
-      for (Element results : resultsSelection) {
-        for (Element result : results.select(".yt-lockup-video")) {
-          if (!result.hasAttr("data-ad-impressions") && result.select(".standalone-ypc-badge-renderer-label").isEmpty()) {
-            extractTrackFromResultEntry(tracks, result, trackFactory);
-          }
+    /**
+     * @param query Search query.
+     * @return Playlist of the first page of results.
+     */
+    override fun loadSearchResult(query: String, trackFactory: Function<AudioTrackInfo, AudioTrack>): AudioItem {
+        log.debug("Performing a search with query {}", query)
+        try {
+            httpInterfaceManager.getInterface().use { httpInterface ->
+                val url = URIBuilder("https://www.youtube.com/results")
+                    .addParameter("search_query", query)
+                    .addParameter("hl", "en")
+                    .addParameter("persist_hl", "1").build()
+                httpInterface.execute(HttpGet(url)).use { response ->
+                    HttpClientTools.assertSuccessWithContent(response, "search response")
+                    val document = Jsoup.parse(response.entity.content, StandardCharsets.UTF_8.name(), "")
+                    return extractSearchResults(document, query, trackFactory)
+                }
+            }
+        } catch (e: Throwable) {
+            throw ExceptionTools.wrapUnfriendlyExceptions(e)
         }
-      }
-    } else {
-      log.debug("Attempting to parse results page as polymer");
-      try {
-        tracks = polymerExtractTracks(document, trackFactory);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
     }
 
-    if (tracks.isEmpty()) {
-      return AudioReference.NO_TRACK;
-    } else {
-      return new BasicAudioPlaylist("Search results for: " + query, tracks, null, true);
-    }
-  }
+    private fun extractSearchResults(
+        document: Document, query: String,
+        trackFactory: Function<AudioTrackInfo, AudioTrack>
+    ): AudioItem {
+        val tracks = mutableListOf<AudioTrack>()
+        val resultsSelection = document.select("#page > #content #results")
+        if (!resultsSelection.isEmpty()) {
+            for (results in resultsSelection) {
+                for (result in results.select(".yt-lockup-video")) {
+                    if (!result.hasAttr("data-ad-impressions")
+                        && result.select(".standalone-ypc-badge-renderer-label").isEmpty()
+                    ) {
+                        extractTrackFromResultEntry(tracks, result, trackFactory)
+                    }
+                }
+            }
+        } else {
+            log.debug("Attempting to parse results page as polymer")
+            try {
+                tracks.addAll(polymerExtractTracks(document, trackFactory))
+            } catch (e: IOException) {
+                throw RuntimeException(e)
+            }
+        }
 
-  private void extractTrackFromResultEntry(List<AudioTrack> tracks, Element element,
-                                           Function<AudioTrackInfo, AudioTrack> trackFactory) {
-
-    Element durationElement = element.select("[class^=video-time]").first();
-    Element contentElement = element.select(".yt-lockup-content").first();
-    String videoId = element.attr("data-context-item-id");
-
-    if (durationElement == null || contentElement == null || videoId.isEmpty()) {
-      return;
-    }
-
-    long duration = DataFormatTools.durationTextToMillis(durationElement.text());
-
-    String title = contentElement.select(".yt-lockup-title > a").text();
-    String author = contentElement.select(".yt-lockup-byline > a").text();
-
-    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
-            WATCH_URL_PREFIX + videoId);
-
-    tracks.add(trackFactory.apply(info));
-  }
-
-  private List<AudioTrack> polymerExtractTracks(Document document, Function<AudioTrackInfo, AudioTrack> trackFactory) throws IOException {
-    // Match the JSON from the HTML. It should be within a script tag
-    Matcher matcher = polymerInitialDataRegex.matcher(document.outerHtml());
-    if (!matcher.find()) {
-      log.warn("Failed to match ytInitialData JSON object");
-      return Collections.emptyList();
+        return if (tracks.isEmpty()) {
+            AudioReference.NO_TRACK
+        } else {
+            BasicAudioPlaylist("Search results for: $query", tracks, null, true)
+        }
     }
 
-    JsonBrowser jsonBrowser = JsonBrowser.parse(matcher.group(2));
-    ArrayList<AudioTrack> list = new ArrayList<>();
-    jsonBrowser.get("contents")
-            .get("twoColumnSearchResultsRenderer")
-            .get("primaryContents")
-            .get("sectionListRenderer")
-            .get("contents")
-            .index(0)
-            .get("itemSectionRenderer")
-            .get("contents")
+    private fun extractTrackFromResultEntry(
+        tracks: MutableList<AudioTrack>, element: Element,
+        trackFactory: Function<AudioTrackInfo, AudioTrack>
+    ) {
+        val durationElement = element.select("[class^=video-time]").first()
+        val contentElement = element.select(".yt-lockup-content").first()
+        val videoId = element.attr("data-context-item-id")
+        if (durationElement == null || contentElement == null || videoId.isEmpty()) {
+            return
+        }
+        val duration = DataFormatTools.durationTextToMillis(durationElement.text())
+        val title = contentElement.select(".yt-lockup-title > a").text()
+        val author = contentElement.select(".yt-lockup-byline > a").text()
+        val info = AudioTrackInfo(title, author, duration, videoId, false, WATCH_URL_PREFIX + videoId)
+        tracks.add(trackFactory.apply(info))
+    }
+
+    @Throws(IOException::class)
+    private fun polymerExtractTracks(
+        document: Document,
+        trackFactory: Function<AudioTrackInfo, AudioTrack>
+    ): MutableList<AudioTrack> {
+        // Match the JSON from the HTML. It should be within a script tag
+        val matcher = polymerInitialDataRegex.matcher(document.outerHtml())
+        if (!matcher.find()) {
+            log.warn("Failed to match ytInitialData JSON object")
+            return mutableListOf()
+        }
+
+        val jsonBrowser = JsonBrowser.parse(matcher.group(2))
+        val tracks = mutableListOf<AudioTrack>()
+        jsonBrowser["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"]
+            .index(0)["itemSectionRenderer"]["contents"]
             .values()
-            .forEach(json -> {
-              AudioTrack track = extractPolymerData(json, trackFactory);
-              if (track != null) list.add(track);
-            });
-    return list;
-  }
-
-  private AudioTrack extractPolymerData(JsonBrowser json, Function<AudioTrackInfo, AudioTrack> trackFactory) {
-    JsonBrowser renderer = json.get("videoRenderer");
-
-    if (renderer.isNull()) {
-      // Not a track, ignore
-      return null;
+            .mapNotNull { extractPolymerData(it, trackFactory) }
+            .forEach(tracks::add)
+        return tracks
     }
 
-    String videoId = renderer.get("videoId").text();
-    String title = renderer.get("title").get("runs").index(0).get("text").text();
-    String author = renderer.get("ownerText").get("runs").index(0).get("text").text();
-    String lengthText = renderer.get("lengthText").get("simpleText").text();
-    boolean isStream = lengthText == null;
+    private fun extractPolymerData(json: JsonBrowser, trackFactory: Function<AudioTrackInfo, AudioTrack>): AudioTrack? {
+        val renderer = json["videoRenderer"]
+        if (renderer.isNull) { // Not a track, ignore
+            return null
+        }
 
-    long duration = isStream ? LIVE_STREAM_DURATION : DataFormatTools.durationTextToMillis(lengthText);
+        val videoId = renderer["videoId"].text()
+        val title = renderer["title"]["runs"].index(0)["text"].text()
+        val author = renderer["ownerText"]["runs"].index(0)["text"].text()
+        val lengthText = renderer["lengthText"]["simpleText"].text()
+        val isStream = lengthText == null
+        val duration = if (isStream) LIVE_STREAM_DURATION else DataFormatTools.durationTextToMillis(lengthText)
+        val info = AudioTrackInfo(title, author, duration, videoId, isStream, WATCH_URL_PREFIX + videoId)
+        return trackFactory.apply(info)
+    }
 
-    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, isStream,
-            WATCH_URL_PREFIX + videoId);
+    companion object {
+        private val log = LoggerFactory.getLogger(YoutubeSearchProvider::class.java)
+        private const val LIVE_STREAM_DURATION = Long.MAX_VALUE
+        private const val WATCH_URL_PREFIX = "https://www.youtube.com/watch?v="
+    }
 
-    return trackFactory.apply(info);
-  }
+    init {
+        httpInterfaceManager.setHttpContextFilter(BaseYoutubeHttpContextFilter())
+    }
 }

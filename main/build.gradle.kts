@@ -1,7 +1,10 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   `java-library`
   groovy
   `maven-publish`
+    kotlin("jvm") version "1.5.0"
 }
 
 val moduleName = "lavaplayer"
@@ -25,6 +28,7 @@ dependencies {
   testImplementation("org.spockframework:spock-core:1.2-groovy-2.5")
   testImplementation("ch.qos.logback:logback-classic:1.2.3")
   testImplementation("com.sedmelluq:lavaplayer-test-samples:1.3.11")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.jar {
@@ -55,4 +59,15 @@ publishing {
       artifact(sourcesJar)
     }
   }
+}
+repositories {
+    mavenCentral()
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }
