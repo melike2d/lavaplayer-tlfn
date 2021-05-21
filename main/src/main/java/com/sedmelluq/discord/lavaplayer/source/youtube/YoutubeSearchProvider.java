@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
+
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
   private static final Logger log = LoggerFactory.getLogger(YoutubeSearchProvider.class);
 
+  private static final long LIVE_STREAM_DURATION = Long.MAX_VALUE;
   private static final String WATCH_URL_PREFIX = "https://www.youtube.com/watch?v=";
   private final HttpInterfaceManager httpInterfaceManager;
   private final Pattern polymerInitialDataRegex = Pattern.compile("(window\\[\"ytInitialData\"]|var ytInitialData)\\s*=\\s*(.*);");
@@ -60,9 +63,9 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
 
     try (HttpInterface httpInterface = httpInterfaceManager.getInterface()) {
       URI url = new URIBuilder("https://www.youtube.com/results")
-          .addParameter("search_query", query)
-          .addParameter("hl", "en")
-          .addParameter("persist_hl", "1").build();
+              .addParameter("search_query", query)
+              .addParameter("hl", "en")
+              .addParameter("persist_hl", "1").build();
 
       try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(url))) {
         HttpClientTools.assertSuccessWithContent(response, "search response");
@@ -121,7 +124,7 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     String author = contentElement.select(".yt-lockup-byline > a").text();
 
     AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
-        WATCH_URL_PREFIX + videoId);
+            WATCH_URL_PREFIX + videoId);
 
     tracks.add(trackFactory.apply(info));
   }
@@ -137,18 +140,18 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     JsonBrowser jsonBrowser = JsonBrowser.parse(matcher.group(2));
     ArrayList<AudioTrack> list = new ArrayList<>();
     jsonBrowser.get("contents")
-        .get("twoColumnSearchResultsRenderer")
-        .get("primaryContents")
-        .get("sectionListRenderer")
-        .get("contents")
-        .index(0)
-        .get("itemSectionRenderer")
-        .get("contents")
-        .values()
-        .forEach(json -> {
-          AudioTrack track = extractPolymerData(json, trackFactory);
-          if (track != null) list.add(track);
-        });
+            .get("twoColumnSearchResultsRenderer")
+            .get("primaryContents")
+            .get("sectionListRenderer")
+            .get("contents")
+            .index(0)
+            .get("itemSectionRenderer")
+            .get("contents")
+            .values()
+            .forEach(json -> {
+              AudioTrack track = extractPolymerData(json, trackFactory);
+              if (track != null) list.add(track);
+            });
     return list;
   }
 
@@ -160,20 +163,16 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
       return null;
     }
 
+    String videoId = renderer.get("videoId").text();
     String title = renderer.get("title").get("runs").index(0).get("text").text();
     String author = renderer.get("ownerText").get("runs").index(0).get("text").text();
     String lengthText = renderer.get("lengthText").get("simpleText").text();
+    boolean isStream = lengthText == null;
 
-    if (lengthText == null) {
-      // Unknown length means this is a livestream, ignore
-      return null;
-    }
+    long duration = isStream ? LIVE_STREAM_DURATION : DataFormatTools.durationTextToMillis(lengthText);
 
-    long duration = DataFormatTools.durationTextToMillis(lengthText);
-    String videoId = renderer.get("videoId").text();
-
-    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
-        WATCH_URL_PREFIX + videoId);
+    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, isStream,
+            WATCH_URL_PREFIX + videoId);
 
     return trackFactory.apply(info);
   }
