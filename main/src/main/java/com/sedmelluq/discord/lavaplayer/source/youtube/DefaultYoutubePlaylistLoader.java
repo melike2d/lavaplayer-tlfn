@@ -9,12 +9,15 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -65,34 +68,34 @@ public class DefaultYoutubePlaylistLoader implements YoutubePlaylistLoader {
     }
 
     JsonBrowser info = jsonResponse
-        .get("sidebar")
-        .get("playlistSidebarRenderer")
-        .get("items")
-        .index(0)
-        .get("playlistSidebarPrimaryInfoRenderer");
+            .get("sidebar")
+            .get("playlistSidebarRenderer")
+            .get("items")
+            .index(0)
+            .get("playlistSidebarPrimaryInfoRenderer");
 
     String playlistName = info
-        .get("title")
-        .get("runs")
-        .index(0)
-        .get("text")
-        .text();
+            .get("title")
+            .get("runs")
+            .index(0)
+            .get("text")
+            .text();
 
     JsonBrowser playlistVideoList = jsonResponse
-        .get("contents")
-        .get("twoColumnBrowseResultsRenderer")
-        .get("tabs")
-        .index(0)
-        .get("tabRenderer")
-        .get("content")
-        .get("sectionListRenderer")
-        .get("contents")
-        .index(0)
-        .get("itemSectionRenderer")
-        .get("contents")
-        .index(0)
-        .get("playlistVideoListRenderer")
-        .get("contents");
+            .get("contents")
+            .get("twoColumnBrowseResultsRenderer")
+            .get("tabs")
+            .index(0)
+            .get("tabRenderer")
+            .get("content")
+            .get("sectionListRenderer")
+            .get("contents")
+            .index(0)
+            .get("itemSectionRenderer")
+            .get("contents")
+            .index(0)
+            .get("playlistVideoListRenderer")
+            .get("contents");
 
     List<AudioTrack> tracks = new ArrayList<>();
     String continuationsToken = extractPlaylistTracks(playlistVideoList, tracks, trackFactory);
@@ -110,15 +113,15 @@ public class DefaultYoutubePlaylistLoader implements YoutubePlaylistLoader {
         JsonBrowser continuationJson = JsonBrowser.parse(response.getEntity().getContent());
 
         JsonBrowser playlistVideoListPage = continuationJson.index(1)
-            .get("response")
-            .get("continuationContents")
-            .get("playlistVideoListContinuation");
+                .get("response")
+                .get("continuationContents")
+                .get("playlistVideoListContinuation");
 
         if (playlistVideoListPage.isNull()) {
           playlistVideoListPage = continuationJson.get("onResponseReceivedActions")
-            .index(0)
-            .get("appendContinuationItemsAction")
-            .get("continuationItems");
+                  .index(0)
+                  .get("appendContinuationItemsAction")
+                  .get("continuationItems");
         }
 
         continuationsToken = extractPlaylistTracks(playlistVideoListPage, tracks, trackFactory);
@@ -132,20 +135,20 @@ public class DefaultYoutubePlaylistLoader implements YoutubePlaylistLoader {
     JsonBrowser alerts = jsonResponse.get("alerts");
 
     if (!alerts.isNull()) {
-      for(JsonBrowser alert : alerts.values()) {
+      for (JsonBrowser alert : alerts.values()) {
         JsonBrowser alertInner = alert.values().get(0);
         String type = alertInner.get("type").text();
 
-        if("ERROR".equals(type)) {
+        if ("ERROR".equals(type)) {
           JsonBrowser textObject = alertInner.get("text");
 
           String text;
-          if(!textObject.get("simpleText").isNull()) {
+          if (!textObject.get("simpleText").isNull()) {
             text = textObject.get("simpleText").text();
           } else {
             text = textObject.get("runs").values().stream()
-                .map(run -> run.get("text").text())
-                .collect(Collectors.joining());
+                    .map(run -> run.get("text").text())
+                    .collect(Collectors.joining());
           }
 
           return text;
@@ -191,16 +194,17 @@ public class DefaultYoutubePlaylistLoader implements YoutubePlaylistLoader {
         long duration = Units.secondsToMillis(lengthSeconds.asLong(Units.DURATION_SEC_UNKNOWN));
 
         AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
-            "https://www.youtube.com/watch?v=" + videoId);
+                "https://www.youtube.com/watch?v=" + videoId,
+                Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId)));
 
         tracks.add(trackFactory.apply(info));
       }
     }
 
     JsonBrowser continuations = playlistTrackEntries.get(playlistTrackEntries.size() - 1)
-        .get("continuationItemRenderer")
-        .get("continuationEndpoint")
-        .get("continuationCommand");
+            .get("continuationItemRenderer")
+            .get("continuationEndpoint")
+            .get("continuationCommand");
 
     String continuationsToken;
     if (!continuations.isNull()) {

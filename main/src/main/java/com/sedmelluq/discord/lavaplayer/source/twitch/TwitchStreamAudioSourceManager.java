@@ -14,14 +14,17 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -44,10 +47,13 @@ public class TwitchStreamAudioSourceManager implements AudioSourceManager, HttpC
   /**
    * Create an instance.
    */
-  public TwitchStreamAudioSourceManager() { this(DEFAULT_CLIENT_ID); }
+  public TwitchStreamAudioSourceManager() {
+    this(DEFAULT_CLIENT_ID);
+  }
 
   /**
    * Create an instance.
+   *
    * @param clientId The Twitch client id for your application.
    */
   public TwitchStreamAudioSourceManager(String clientId) {
@@ -107,6 +113,7 @@ public class TwitchStreamAudioSourceManager implements AudioSourceManager, HttpC
 
       JsonBrowser channelData = channelInfo.get("stream").get("channel");
       String status = channelData.get("status").text();
+      final String thumbnail = channelData.get("thumbnail_url").text().replace("-{width}x{height}.jpg", "-1920x1080.jpg");
 
       return new TwitchStreamAudioTrack(new AudioTrackInfo(
               status,
@@ -114,7 +121,8 @@ public class TwitchStreamAudioSourceManager implements AudioSourceManager, HttpC
               Units.DURATION_MS_UNKNOWN,
               reference.identifier,
               true,
-              reference.identifier
+              reference.identifier,
+              Collections.singletonMap("artworkUrl", thumbnail)
       ), this);
     }
   }
@@ -136,6 +144,7 @@ public class TwitchStreamAudioSourceManager implements AudioSourceManager, HttpC
 
   /**
    * Extract channel identifier from a channel URL.
+   *
    * @param url Channel URL
    * @return Channel identifier (for API requests)
    */

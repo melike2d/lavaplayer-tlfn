@@ -11,7 +11,10 @@ import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser;
 import com.sedmelluq.discord.lavaplayer.tools.Units;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+
+import java.util.Collections;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,11 +25,11 @@ import static com.sedmelluq.discord.lavaplayer.tools.Units.DURATION_MS_UNKNOWN;
 public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
   private static final Logger log = LoggerFactory.getLogger(DefaultYoutubeTrackDetails.class);
 
-  private static final YoutubeTrackFormatExtractor[] FORMAT_EXTRACTORS = new YoutubeTrackFormatExtractor[] {
-      new LegacyAdaptiveFormatsExtractor(),
-      new StreamingDataFormatsExtractor(),
-      new LegacyDashMpdFormatsExtractor(),
-      new LegacyStreamMapFormatsExtractor()
+  private static final YoutubeTrackFormatExtractor[] FORMAT_EXTRACTORS = new YoutubeTrackFormatExtractor[]{
+          new LegacyAdaptiveFormatsExtractor(),
+          new StreamingDataFormatsExtractor(),
+          new LegacyDashMpdFormatsExtractor(),
+          new LegacyStreamMapFormatsExtractor()
   };
 
   private final String videoId;
@@ -57,8 +60,8 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
   }
 
   private List<YoutubeTrackFormat> loadTrackFormats(
-      HttpInterface httpInterface,
-      YoutubeSignatureResolver signatureResolver
+          HttpInterface httpInterface,
+          YoutubeSignatureResolver signatureResolver
   ) {
     for (YoutubeTrackFormatExtractor extractor : FORMAT_EXTRACTORS) {
       List<YoutubeTrackFormat> formats = extractor.extract(data, httpInterface, signatureResolver);
@@ -69,14 +72,14 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
     }
 
     log.warn(
-        "Video {} with no detected format field, response {} polymer {}",
-        videoId,
-        data.playerResponse.format(),
-        data.polymerArguments.format()
+            "Video {} with no detected format field, response {} polymer {}",
+            videoId,
+            data.playerResponse.format(),
+            data.polymerArguments.format()
     );
 
     throw new FriendlyException("Unable to play this YouTube track.", SUSPICIOUS,
-        new IllegalStateException("No track formats found."));
+            new IllegalStateException("No track formats found."));
   }
 
   private AudioTrackInfo loadTrackInfo() {
@@ -93,8 +96,8 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
     }
 
     TemporalInfo temporalInfo = TemporalInfo.fromRawData(
-        videoDetails.get("isLiveContent").asBoolean(false),
-        videoDetails.get("lengthSeconds")
+            videoDetails.get("isLiveContent").asBoolean(false),
+            videoDetails.get("lengthSeconds")
     );
 
     return buildTrackInfo(videoId, videoDetails.get("title").text(), videoDetails.get("author").text(), temporalInfo);
@@ -108,8 +111,8 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
     }
 
     TemporalInfo temporalInfo = TemporalInfo.fromRawData(
-        "1".equals(args.get("live_playback").text()),
-        args.get("length_seconds")
+            "1".equals(args.get("live_playback").text()),
+            args.get("length_seconds")
     );
 
     return buildTrackInfo(videoId, args.get("title").text(), args.get("author").text(), temporalInfo);
@@ -117,7 +120,8 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
 
   private AudioTrackInfo buildTrackInfo(String videoId, String title, String uploader, TemporalInfo temporalInfo) {
     return new AudioTrackInfo(title, uploader, temporalInfo.durationMillis, videoId, temporalInfo.isActiveStream,
-        "https://www.youtube.com/watch?v=" + videoId);
+            "https://www.youtube.com/watch?v=" + videoId,
+            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId)));
   }
 
   private static class TemporalInfo {
@@ -136,8 +140,8 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
       boolean isActiveStream = wasLiveStream && durationValue == 0;
 
       return new TemporalInfo(
-          isActiveStream,
-          durationValue == 0 ? DURATION_MS_UNKNOWN : Units.secondsToMillis(durationValue)
+              isActiveStream,
+              durationValue == 0 ? DURATION_MS_UNKNOWN : Units.secondsToMillis(durationValue)
       );
     }
   }

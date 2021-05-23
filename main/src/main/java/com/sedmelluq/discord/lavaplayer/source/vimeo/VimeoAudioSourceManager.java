@@ -14,13 +14,16 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -119,7 +122,7 @@ public class VimeoAudioSourceManager implements AudioSourceManager, HttpConfigur
         return AudioReference.NO_TRACK;
       } else if (!HttpClientTools.isSuccessWithContent(statusCode)) {
         throw new FriendlyException("Server responded with an error.", SUSPICIOUS,
-            new IllegalStateException("Response code is " + statusCode));
+                new IllegalStateException("Response code is " + statusCode));
       }
 
       return loadTrackFromPageContent(trackUrl, IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8));
@@ -134,12 +137,13 @@ public class VimeoAudioSourceManager implements AudioSourceManager, HttpConfigur
     }
 
     return new VimeoAudioTrack(new AudioTrackInfo(
-        config.get("clip").get("title").text(),
-        config.get("owner").get("display_name").text(),
-        (long) (config.get("clip").get("duration").get("raw").as(Double.class) * 1000.0),
-        trackUrl,
-        false,
-        trackUrl
+            config.get("clip").get("title").text(),
+            config.get("owner").get("display_name").text(),
+            (long) (config.get("clip").get("duration").get("raw").as(Double.class) * 1000.0),
+            trackUrl,
+            false,
+            trackUrl,
+            Collections.singletonMap("artworkUrl", config.get("thumbnail").get("src").text())
     ), this);
   }
 }

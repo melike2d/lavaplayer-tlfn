@@ -70,7 +70,8 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
       try (CloseableHttpResponse response = httpInterface.execute(new HttpGet(url))) {
         HttpClientTools.assertSuccessWithContent(response, "search response");
 
-        Document document = Jsoup.parse(response.getEntity().getContent(), StandardCharsets.UTF_8.name(), "");
+        Document document = Jsoup.parse(response.getEntity()
+                .getContent(), StandardCharsets.UTF_8.name(), "");
         return extractSearchResults(document, query, trackFactory);
       }
     } catch (Exception e) {
@@ -78,15 +79,19 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     }
   }
 
-  private AudioItem extractSearchResults(Document document, String query,
-                                         Function<AudioTrackInfo, AudioTrack> trackFactory) {
+  private AudioItem extractSearchResults(
+          Document document, String query,
+          Function<AudioTrackInfo, AudioTrack> trackFactory
+  ) {
 
     List<AudioTrack> tracks = new ArrayList<>();
     Elements resultsSelection = document.select("#page > #content #results");
     if (!resultsSelection.isEmpty()) {
       for (Element results : resultsSelection) {
         for (Element result : results.select(".yt-lockup-video")) {
-          if (!result.hasAttr("data-ad-impressions") && result.select(".standalone-ypc-badge-renderer-label").isEmpty()) {
+          if (!result.hasAttr("data-ad-impressions") && result.select(".standalone-ypc-badge-renderer-label")
+                  .isEmpty()
+          ) {
             extractTrackFromResultEntry(tracks, result, trackFactory);
           }
         }
@@ -107,8 +112,10 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     }
   }
 
-  private void extractTrackFromResultEntry(List<AudioTrack> tracks, Element element,
-                                           Function<AudioTrackInfo, AudioTrack> trackFactory) {
+  private void extractTrackFromResultEntry(
+          List<AudioTrack> tracks, Element element,
+          Function<AudioTrackInfo, AudioTrack> trackFactory
+  ) {
 
     Element durationElement = element.select("[class^=video-time]").first();
     Element contentElement = element.select(".yt-lockup-content").first();
@@ -123,8 +130,11 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     String title = contentElement.select(".yt-lockup-title > a").text();
     String author = contentElement.select(".yt-lockup-byline > a").text();
 
-    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
-            WATCH_URL_PREFIX + videoId);
+    AudioTrackInfo info = new AudioTrackInfo(
+            title, author, duration, videoId, false,
+            WATCH_URL_PREFIX + videoId,
+            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
+    );
 
     tracks.add(trackFactory.apply(info));
   }
@@ -171,8 +181,11 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
 
     long duration = isStream ? LIVE_STREAM_DURATION : DataFormatTools.durationTextToMillis(lengthText);
 
-    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, isStream,
-            WATCH_URL_PREFIX + videoId);
+    AudioTrackInfo info = new AudioTrackInfo(
+            title, author, duration, videoId, isStream,
+            WATCH_URL_PREFIX + videoId,
+            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
+    );
 
     return trackFactory.apply(info);
   }
