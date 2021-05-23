@@ -25,6 +25,7 @@ import com.sedmelluq.discord.lavaplayer.track.playback.AudioTrackExecutor;
 import com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor;
 import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
 import com.sedmelluq.lava.common.tools.ExecutorTools;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -32,10 +33,7 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
@@ -103,9 +102,9 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
 
     // Executors
     trackPlaybackExecutorService = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 10, TimeUnit.SECONDS,
-        new SynchronousQueue<>(), new DaemonThreadFactory("playback"));
+            new SynchronousQueue<>(), new DaemonThreadFactory("playback"));
     trackInfoExecutorService = ExecutorTools.createEagerlyScalingExecutor(1, DEFAULT_LOADER_POOL_SIZE,
-        TimeUnit.SECONDS.toMillis(30), LOADER_QUEUE_CAPACITY, new DaemonThreadFactory("info-loader"));
+            TimeUnit.SECONDS.toMillis(30), LOADER_QUEUE_CAPACITY, new DaemonThreadFactory("info-loader"));
     scheduledExecutorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("manager"));
     orderedInfoExecutor = new OrderedExecutor(trackInfoExecutorService);
 
@@ -251,6 +250,7 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
     output.writeUTF(trackInfo.identifier);
     output.writeBoolean(trackInfo.isStream);
     DataFormatTools.writeNullableText(output, trackInfo.uri);
+    DataFormatTools.writeNullableText(output, trackInfo.getArtworkUrl());
 
     encodeTrackDetails(track, output);
     output.writeLong(track.getPosition());
@@ -267,8 +267,15 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
 
     int version = (stream.getMessageFlags() & TRACK_INFO_VERSIONED) != 0 ? (input.readByte() & 0xFF) : 1;
 
-    AudioTrackInfo trackInfo = new AudioTrackInfo(input.readUTF(), input.readUTF(), input.readLong(), input.readUTF(),
-        input.readBoolean(), version >= 2 ? DataFormatTools.readNullableText(input) : null);
+    AudioTrackInfo trackInfo = new AudioTrackInfo(input.readUTF(),
+            input.readUTF(),
+            input.readLong(),
+            input.readUTF(),
+            input.readBoolean(),
+            version >= 2 ? DataFormatTools.readNullableText(input) : null,
+            Collections.singletonMap("artwork", DataFormatTools.readNullableText(input))
+    );
+
     AudioTrack track = decodeTrackDetails(trackInfo, input);
     long position = input.readLong();
 
@@ -283,6 +290,7 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
 
   /**
    * Encodes an audio track to a byte array. Does not include AudioTrackInfo in the buffer.
+   *
    * @param track The track to encode
    * @return The bytes of the encoded data
    */
@@ -307,8 +315,9 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
 
   /**
    * Decodes an audio track from a byte array.
+   *
    * @param trackInfo Track info for the track to decode
-   * @param buffer Byte array containing the encoded track
+   * @param buffer    Byte array containing the encoded track
    * @return Decoded audio track
    */
   public AudioTrack decodeTrackDetails(AudioTrackInfo trackInfo, byte[] buffer) {
@@ -334,8 +343,9 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
 
   /**
    * Executes an audio track with the given player and volume.
-   * @param listener A listener for track state events
-   * @param track The audio track to execute
+   *
+   * @param listener      A listener for track state events
+   * @param track         The audio track to execute
    * @param configuration The audio configuration to use for executing
    * @param playerOptions Options of the audio player
    */
