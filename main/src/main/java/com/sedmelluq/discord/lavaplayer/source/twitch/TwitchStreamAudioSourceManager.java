@@ -113,7 +113,8 @@ public class TwitchStreamAudioSourceManager implements AudioSourceManager, HttpC
 
       JsonBrowser channelData = channelInfo.get("stream").get("channel");
       String status = channelData.get("status").text();
-      final String thumbnail = channelData.get("thumbnail_url").text().replace("-{width}x{height}.jpg", "-1920x1080.jpg");
+      final String thumbnail = channelData.get("logo").text();
+      // final String thumbnail = channelInfo.get("stream").get("preview").get("large").text();
 
       return new TwitchStreamAudioTrack(new AudioTrackInfo(
               status,

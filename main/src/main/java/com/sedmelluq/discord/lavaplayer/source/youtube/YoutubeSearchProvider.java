@@ -177,6 +177,7 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     String title = renderer.get("title").get("runs").index(0).get("text").text();
     String author = renderer.get("ownerText").get("runs").index(0).get("text").text();
     String lengthText = renderer.get("lengthText").get("simpleText").text();
+    System.out.println(renderer.format());
     boolean isStream = lengthText == null;
 
     long duration = isStream ? LIVE_STREAM_DURATION : DataFormatTools.durationTextToMillis(lengthText);
