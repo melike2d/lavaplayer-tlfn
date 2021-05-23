@@ -9,10 +9,13 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
@@ -25,15 +28,15 @@ public class YoutubeMixProvider implements YoutubeMixLoader {
   /**
    * Loads tracks from mix in parallel into a playlist entry.
    *
-   * @param mixId ID of the mix
+   * @param mixId           ID of the mix
    * @param selectedVideoId Selected track, {@link AudioPlaylist#getSelectedTrack()} will return this.
    * @return Playlist of the tracks in the mix.
    */
   public AudioPlaylist load(
-      HttpInterface httpInterface,
-      String mixId,
-      String selectedVideoId,
-      Function<AudioTrackInfo, AudioTrack> trackFactory
+          HttpInterface httpInterface,
+          String mixId,
+          String selectedVideoId,
+          Function<AudioTrackInfo, AudioTrack> trackFactory
   ) {
     String playlistTitle = "YouTube mix";
     List<AudioTrack> tracks = new ArrayList<>();
@@ -70,9 +73,9 @@ public class YoutubeMixProvider implements YoutubeMixLoader {
   }
 
   private void extractPlaylistTracks(
-      JsonBrowser browser,
-      List<AudioTrack> tracks,
-      Function<AudioTrackInfo, AudioTrack> trackFactory
+          JsonBrowser browser,
+          List<AudioTrack> tracks,
+          Function<AudioTrackInfo, AudioTrack> trackFactory
   ) {
     for (JsonBrowser video : browser.values()) {
       JsonBrowser renderer = video.get("playlistPanelVideoRenderer");
@@ -83,7 +86,15 @@ public class YoutubeMixProvider implements YoutubeMixLoader {
       String identifier = renderer.get("videoId").text();
       String uri = "https://youtube.com/watch?v=" + identifier;
 
-      AudioTrackInfo trackInfo = new AudioTrackInfo(title, author, duration, identifier, false, uri);
+      AudioTrackInfo trackInfo = new AudioTrackInfo(
+              title,
+              author,
+              duration,
+              identifier,
+              false,
+              uri,
+              Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", identifier))
+      );
       tracks.add(trackFactory.apply(trackInfo));
     }
   }
@@ -95,11 +106,11 @@ public class YoutubeMixProvider implements YoutubeMixLoader {
       int hours = Integer.parseInt(parts[0]);
       int minutes = Integer.parseInt(parts[1]);
       int seconds = Integer.parseInt(parts[2]);
-      return (hours * 3600000) + (minutes * 60000) + (seconds * 1000);
+      return (hours * 3_600_000L) + (minutes * 60_000L) + (seconds * 1_000L);
     } else if (parts.length == 2) { // mm:ss
       int minutes = Integer.parseInt(parts[0]);
       int seconds = Integer.parseInt(parts[1]);
-      return (minutes * 60000) + (seconds * 1000);
+      return (minutes * 60_000L) + (seconds * 1_000L);
     } else {
       return Units.DURATION_MS_UNKNOWN;
     }

@@ -8,9 +8,11 @@ import com.sedmelluq.discord.lavaplayer.tools.io.SeekableInputStream;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,7 @@ public class MatroskaContainerProbe implements MediaContainerProbe {
   public static final String VORBIS_CODEC = "A_VORBIS";
   public static final String AAC_CODEC = "A_AAC";
 
-  private static final int[] EBML_TAG = new int[] { 0x1A, 0x45, 0xDF, 0xA3 };
+  private static final int[] EBML_TAG = new int[]{0x1A, 0x45, 0xDF, 0xA3};
   private static final List<String> supportedCodecs = Arrays.asList(OPUS_CODEC, VORBIS_CODEC, AAC_CODEC);
 
   @Override
@@ -58,8 +60,14 @@ public class MatroskaContainerProbe implements MediaContainerProbe {
       return unsupportedFormat(this, "No supported audio tracks present in the file.");
     }
 
-    return supportedFormat(this, null, new AudioTrackInfo(UNKNOWN_TITLE, UNKNOWN_ARTIST,
-        (long) file.getDuration(), reference.identifier, false, reference.identifier));
+    return supportedFormat(this, null, new AudioTrackInfo(
+            UNKNOWN_TITLE,
+            UNKNOWN_ARTIST,
+            (long) file.getDuration(),
+            reference.identifier,
+            false,
+            reference.identifier,
+            null));
   }
 
   private boolean hasSupportedAudioTrack(MatroskaStreamingFile file) {

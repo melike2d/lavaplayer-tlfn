@@ -5,10 +5,13 @@ import com.sedmelluq.discord.lavaplayer.format.OpusAudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
+import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * Codec for track start message.
@@ -53,6 +56,8 @@ public class TrackStartRequestCodec implements RemoteMessageCodec<TrackStartRequ
     out.writeLong(message.trackInfo.length);
     out.writeUTF(message.trackInfo.identifier);
     out.writeBoolean(message.trackInfo.isStream);
+    DataFormatTools.writeNullableText(out, message.trackInfo.uri);
+    DataFormatTools.writeNullableText(out, message.trackInfo.getArtworkUrl());
     out.writeInt(message.encodedTrack.length);
     out.write(message.encodedTrack);
     out.writeInt(message.volume);
@@ -75,7 +80,14 @@ public class TrackStartRequestCodec implements RemoteMessageCodec<TrackStartRequ
   @Override
   public TrackStartRequestMessage decode(DataInput in, int version) throws IOException {
     long executorId = in.readLong();
-    AudioTrackInfo trackInfo = new AudioTrackInfo(in.readUTF(), in.readUTF(), in.readLong(), in.readUTF(), in.readBoolean(), null);
+    AudioTrackInfo trackInfo = new AudioTrackInfo(in.readUTF(),
+            in.readUTF(),
+            in.readLong(),
+            in.readUTF(),
+            in.readBoolean(),
+            DataFormatTools.readNullableText(in),
+            Collections.singletonMap("artwork", DataFormatTools.readNullableText(in))
+    );
 
     byte[] encodedTrack = new byte[in.readInt()];
     in.readFully(encodedTrack);
@@ -100,7 +112,7 @@ public class TrackStartRequestCodec implements RemoteMessageCodec<TrackStartRequ
   }
 
   private AudioDataFormat createFormat(int channelCount, int sampleRate, int chunkSampleCount, String codecName)
-      throws IOException {
+          throws IOException {
 
     switch (codecName) {
       case OpusAudioDataFormat.CODEC_NAME:

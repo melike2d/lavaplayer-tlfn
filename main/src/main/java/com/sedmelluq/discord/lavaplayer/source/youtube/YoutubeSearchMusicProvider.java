@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
+
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -61,8 +63,8 @@ public class YoutubeSearchMusicProvider implements YoutubeSearchMusicResultLoade
 
     try (HttpInterface httpInterface = httpInterfaceManager.getInterface()) {
       URI url = new URIBuilder("https://music.youtube.com/youtubei/v1/search")
-          .addParameter("alt", "json")
-          .addParameter("key", YT_MUSIC_KEY).build();
+              .addParameter("alt", "json")
+              .addParameter("key", YT_MUSIC_KEY).build();
 
       HttpPost post = new HttpPost(url);
       StringEntity payload = new StringEntity(String.format(YT_MUSIC_PAYLOAD, query), "UTF-8");
@@ -120,9 +122,9 @@ public class YoutubeSearchMusicProvider implements YoutubeSearchMusicResultLoade
               .get("contents");
     }
     tracks.values().forEach(json -> {
-          AudioTrack track = extractMusicData(json, trackFactory);
-          if (track != null) list.add(track);
-        });
+      AudioTrack track = extractMusicData(json, trackFactory);
+      if (track != null) list.add(track);
+    });
     return list;
   }
 
@@ -156,8 +158,14 @@ public class YoutubeSearchMusicProvider implements YoutubeSearchMusicResultLoade
 
     long duration = DataFormatTools.durationTextToMillis(lastElement.get("text").text());
 
-    AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
-        WATCH_URL_PREFIX + videoId);
+    AudioTrackInfo info = new AudioTrackInfo(title,
+            author,
+            duration,
+            videoId,
+            false,
+            WATCH_URL_PREFIX + videoId,
+            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
+    );
 
     return trackFactory.apply(info);
   }
