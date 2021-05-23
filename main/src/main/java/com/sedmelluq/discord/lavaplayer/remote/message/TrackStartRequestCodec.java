@@ -86,7 +86,7 @@ public class TrackStartRequestCodec implements RemoteMessageCodec<TrackStartRequ
             in.readUTF(),
             in.readBoolean(),
             DataFormatTools.readNullableText(in),
-            Collections.singletonMap("artwork", DataFormatTools.readNullableText(in))
+            Collections.singletonMap("artworkUrl", DataFormatTools.readNullableText(in))
     );
 
     byte[] encodedTrack = new byte[in.readInt()];
