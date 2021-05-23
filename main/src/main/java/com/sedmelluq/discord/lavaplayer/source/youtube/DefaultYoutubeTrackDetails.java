@@ -100,6 +100,8 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
             videoDetails.get("lengthSeconds")
     );
 
+    System.out.println(videoDetails.format());
+
     return buildTrackInfo(videoId, videoDetails.get("title").text(), videoDetails.get("author").text(), temporalInfo);
   }
 
