@@ -86,6 +86,8 @@ public class YoutubeMixProvider implements YoutubeMixLoader {
       String identifier = renderer.get("videoId").text();
       String uri = "https://youtube.com/watch?v=" + identifier;
 
+      System.out.println(renderer.format());
+
       AudioTrackInfo trackInfo = new AudioTrackInfo(
               title,
               author,

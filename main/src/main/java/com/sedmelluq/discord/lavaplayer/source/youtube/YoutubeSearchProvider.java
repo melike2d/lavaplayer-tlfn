@@ -16,12 +16,12 @@ import com.sedmelluq.discord.lavaplayer.track.BasicAudioPlaylist;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -29,9 +29,12 @@ import org.apache.http.client.utils.URIBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Collector;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.text.html.Option;
 
 /**
  * Handles processing YouTube searches.
@@ -177,15 +180,26 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     String title = renderer.get("title").get("runs").index(0).get("text").text();
     String author = renderer.get("ownerText").get("runs").index(0).get("text").text();
     String lengthText = renderer.get("lengthText").get("simpleText").text();
-    System.out.println(renderer.format());
     boolean isStream = lengthText == null;
-
     long duration = isStream ? LIVE_STREAM_DURATION : DataFormatTools.durationTextToMillis(lengthText);
+
+    Optional<JsonBrowser> thumbnail = renderer.get("thumbnail").get("thumbnails").values()
+            .stream()
+            .max((t1, t2) -> {
+              long t1Sum = t1.get("width").asLong(0L) + t1.get("height").asLong(0L);
+              long t2Sum = t2.get("width").asLong(0L) + t2.get("height").asLong(0L);
+              return Long.compare(t1Sum, t2Sum);
+            });
+    String artwork;
+    if (thumbnail.isPresent())
+      artwork = thumbnail.get().get("url").text();
+    else
+      artwork = String.format("https://img.youtube.com/vi/%s/0.jpg", videoId);
 
     AudioTrackInfo info = new AudioTrackInfo(
             title, author, duration, videoId, isStream,
             WATCH_URL_PREFIX + videoId,
-            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
+            Collections.singletonMap("artworkUrl", artwork)
     );
 
     return trackFactory.apply(info);

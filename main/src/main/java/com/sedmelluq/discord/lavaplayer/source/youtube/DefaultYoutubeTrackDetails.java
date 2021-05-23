@@ -115,13 +115,21 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
             args.get("length_seconds")
     );
 
+    System.out.println(args.format());
+
     return buildTrackInfo(videoId, args.get("title").text(), args.get("author").text(), temporalInfo);
   }
 
   private AudioTrackInfo buildTrackInfo(String videoId, String title, String uploader, TemporalInfo temporalInfo) {
-    return new AudioTrackInfo(title, uploader, temporalInfo.durationMillis, videoId, temporalInfo.isActiveStream,
+    return new AudioTrackInfo(
+            title,
+            uploader,
+            temporalInfo.durationMillis,
+            videoId,
+            temporalInfo.isActiveStream,
             "https://www.youtube.com/watch?v=" + videoId,
-            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId)));
+            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
+    );
   }
 
   private static class TemporalInfo {

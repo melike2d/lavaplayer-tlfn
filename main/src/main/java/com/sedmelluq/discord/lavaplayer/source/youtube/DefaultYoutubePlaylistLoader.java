@@ -193,7 +193,13 @@ public class DefaultYoutubePlaylistLoader implements YoutubePlaylistLoader {
         JsonBrowser lengthSeconds = item.get("lengthSeconds");
         long duration = Units.secondsToMillis(lengthSeconds.asLong(Units.DURATION_SEC_UNKNOWN));
 
-        AudioTrackInfo info = new AudioTrackInfo(title, author, duration, videoId, false,
+        System.out.println(item.format());
+
+        AudioTrackInfo info = new AudioTrackInfo(title,
+                author,
+                duration,
+                videoId,
+                false,
                 "https://www.youtube.com/watch?v=" + videoId,
                 Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId)));
 
