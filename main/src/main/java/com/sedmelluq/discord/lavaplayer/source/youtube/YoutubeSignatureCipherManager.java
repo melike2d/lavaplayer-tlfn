@@ -235,6 +235,10 @@ public class YoutubeSignatureCipherManager implements YoutubeSignatureResolver {
     return cipherKey;
   }
 
+  public void clearCache(String cipherScriptUrl) {
+    cipherCache.remove(cipherScriptUrl);
+  }
+
   private static String extractDollarEscapedFirstGroup(Pattern pattern, String text) {
     Matcher matcher = pattern.matcher(text);
     return matcher.find() ? matcher.group(1).replace("$", "\\$") : null;

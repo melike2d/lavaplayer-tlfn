@@ -14,7 +14,7 @@ object SearchingTest {
         val pm = DefaultAudioPlayerManager()
         pm.registerSourceManager(YoutubeAudioSourceManager())
         val future = CompletableFuture<String>()
-        pm.loadItem("ytmsearch:Never Done This", object: AudioLoadResultHandler {
+        pm.loadItem("ytsearch:Never Done This", object: AudioLoadResultHandler {
             override fun trackLoaded(track: AudioTrack) {
                 future.complete(track.info.artworkUrl)
             }

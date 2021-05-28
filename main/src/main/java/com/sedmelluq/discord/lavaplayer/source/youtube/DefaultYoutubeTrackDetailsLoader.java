@@ -297,13 +297,25 @@ public class DefaultYoutubeTrackDetailsLoader implements YoutubeTrackDetailsLoad
     }
   }
 
-  protected static class CachedPlayerScript {
-    public final String playerScriptUrl;
-    public final long timestamp;
+  public CachedPlayerScript getCachedPlayerScript() {
+    return cachedPlayerScript;
+  }
+
+  public void clearCache() {
+    cachedPlayerScript = null;
+  }
+
+  public static class CachedPlayerScript {
+    private final String playerScriptUrl;
+    private final long timestamp;
 
     public CachedPlayerScript(String playerScriptUrl, long timestamp) {
       this.playerScriptUrl = playerScriptUrl;
       this.timestamp = timestamp;
+    }
+
+    public String getPlayerScriptUrl() {
+      return playerScriptUrl;
     }
   }
 }
