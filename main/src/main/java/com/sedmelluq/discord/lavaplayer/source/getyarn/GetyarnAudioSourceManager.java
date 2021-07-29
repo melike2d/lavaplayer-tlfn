@@ -3,6 +3,7 @@ package com.sedmelluq.discord.lavaplayer.source.getyarn;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.tools.ThumbnailTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpConfigurable;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
@@ -17,6 +18,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -106,6 +108,7 @@ public class GetyarnAudioSourceManager implements HttpConfigurable, AudioSourceM
     try (final CloseableHttpResponse response = getHttpInterface().execute(new HttpGet(reference.identifier))) {
       final String html = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
       final Document document = Jsoup.parse(html);
+      final String artwork = document.selectFirst(".video-js .ab100").attr("poster");
 
       final AudioTrackInfo trackInfo = AudioTrackInfoBuilder.empty()
           .setUri(reference.identifier)
@@ -113,6 +116,7 @@ public class GetyarnAudioSourceManager implements HttpConfigurable, AudioSourceM
           .setIsStream(false)
           .setIdentifier(document.selectFirst("meta[property=og:video:secure_url]").attr("content"))
           .setTitle(document.selectFirst("meta[property=og:title]").attr("content"))
+          .setMetadata(ThumbnailTools.getAsMetadata(artwork))
           .build();
 
       return createTrack(trackInfo);

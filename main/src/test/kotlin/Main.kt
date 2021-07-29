@@ -8,7 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 fun main() {
     val playerManager = DefaultAudioPlayerManager()
     AudioSourceManagers.registerRemoteSources(playerManager)
-    playerManager.loadItem("https://vimeo.com/99542067", object : AudioLoadResultHandler {
+    playerManager.loadItem("https://sallyspitz.bandcamp.com/track/unchained", object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
             println(track.info.title)
             println(track.info.uri)
