@@ -137,7 +137,7 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     AudioTrackInfo info = new AudioTrackInfo(
             title, author, duration, videoId, false,
             WATCH_URL_PREFIX + videoId,
-            Collections.singletonMap("artworkUrl", String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
+            ThumbnailTools.getAsMetadata(String.format("https://img.youtube.com/vi/%s/0.jpg", videoId))
     );
 
     tracks.add(trackFactory.apply(info));
@@ -188,7 +188,7 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     AudioTrackInfo info = new AudioTrackInfo(
             title, author, duration, videoId, isStream,
             WATCH_URL_PREFIX + videoId,
-            Collections.singletonMap("artworkUrl", artwork)
+            ThumbnailTools.getAsMetadata(artwork)
     );
 
     return trackFactory.apply(info);

@@ -17,4 +17,7 @@ object ThumbnailTools {
         else jsonBrowser.get("user").get("avatar_url").text())
             .replace("large.jpg", "original.jpg")
     }
+
+    @JvmStatic
+    fun getAsMetadata(thumbnail: String) = mapOf("artworkUrl" to thumbnail)
 }

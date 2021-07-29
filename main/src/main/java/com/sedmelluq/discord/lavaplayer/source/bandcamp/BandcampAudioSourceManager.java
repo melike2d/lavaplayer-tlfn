@@ -2,10 +2,7 @@ package com.sedmelluq.discord.lavaplayer.source.bandcamp;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
-import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser;
+import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpConfigurable;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
@@ -119,7 +116,7 @@ public class BandcampAudioSourceManager implements AudioSourceManager, HttpConfi
         bandUrl + trackInfo.get("title_link").text(),
         false,
         trackPageUrl,
-        Collections.singletonMap("artworkUrl", artworkUrl)
+        ThumbnailTools.getAsMetadata(artworkUrl)
     ), this);
   }
 

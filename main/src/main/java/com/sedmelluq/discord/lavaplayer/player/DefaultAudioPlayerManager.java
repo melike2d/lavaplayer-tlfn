@@ -5,11 +5,7 @@ import com.sedmelluq.discord.lavaplayer.remote.RemoteNodeManager;
 import com.sedmelluq.discord.lavaplayer.remote.RemoteNodeRegistry;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.ProbingAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
-import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.GarbageCollectionMonitor;
-import com.sedmelluq.discord.lavaplayer.tools.OrderedExecutor;
+import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpConfigurable;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
 import com.sedmelluq.discord.lavaplayer.tools.io.MessageOutput;
@@ -265,15 +261,13 @@ public class DefaultAudioPlayerManager implements AudioPlayerManager {
       return null;
     }
 
-    int version = (stream.getMessageFlags() & TRACK_INFO_VERSIONED) != 0 ? (input.readByte() & 0xFF) : 1;
-
     AudioTrackInfo trackInfo = new AudioTrackInfo(input.readUTF(),
             input.readUTF(),
             input.readLong(),
             input.readUTF(),
             input.readBoolean(),
             DataFormatTools.readNullableText(input),
-            Collections.singletonMap("artworkUrl", DataFormatTools.readNullableText(input))
+            ThumbnailTools.getAsMetadata(Objects.requireNonNull(DataFormatTools.readNullableText(input)))
     );
 
     AudioTrack track = decodeTrackDetails(trackInfo, input);

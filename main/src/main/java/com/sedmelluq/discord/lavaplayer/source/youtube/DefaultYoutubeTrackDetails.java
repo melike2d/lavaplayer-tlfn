@@ -145,7 +145,7 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
             videoId,
             temporalInfo.isActiveStream,
             "https://www.youtube.com/watch?v=" + videoId,
-            Collections.singletonMap("artworkUrl", artwork)
+            ThumbnailTools.getAsMetadata(artwork)
     );
   }
 

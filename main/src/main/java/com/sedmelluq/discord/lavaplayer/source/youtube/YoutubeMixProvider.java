@@ -97,7 +97,7 @@ public class YoutubeMixProvider implements YoutubeMixLoader {
               identifier,
               false,
               uri,
-              Collections.singletonMap("artworkUrl", artwork)
+              ThumbnailTools.getAsMetadata(artwork)
       );
       tracks.add(trackFactory.apply(trackInfo));
     }

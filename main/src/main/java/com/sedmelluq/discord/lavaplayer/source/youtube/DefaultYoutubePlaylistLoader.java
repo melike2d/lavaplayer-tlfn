@@ -200,7 +200,7 @@ public class DefaultYoutubePlaylistLoader implements YoutubePlaylistLoader {
                 videoId,
                 false,
                 "https://www.youtube.com/watch?v=" + videoId,
-                Collections.singletonMap("artworkUrl", artwork));
+                ThumbnailTools.getAsMetadata(artwork));
 
         tracks.add(trackFactory.apply(info));
       }

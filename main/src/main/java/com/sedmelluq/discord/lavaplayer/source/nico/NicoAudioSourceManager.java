@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
+import com.sedmelluq.discord.lavaplayer.tools.ThumbnailTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpConfigurable;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
@@ -112,7 +113,7 @@ public class NicoAudioSourceManager implements AudioSourceManager, HttpConfigura
               videoId,
               false,
               getWatchUrl(videoId),
-              Collections.singletonMap("artworkUrl", thumbnailUrl)), this);
+              ThumbnailTools.getAsMetadata(thumbnailUrl)), this);
     }
 
     return null;

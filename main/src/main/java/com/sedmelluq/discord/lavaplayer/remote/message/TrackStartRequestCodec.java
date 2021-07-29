@@ -6,12 +6,14 @@ import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
+import com.sedmelluq.discord.lavaplayer.tools.ThumbnailTools;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Objects;
 
 /**
  * Codec for track start message.
@@ -86,7 +88,7 @@ public class TrackStartRequestCodec implements RemoteMessageCodec<TrackStartRequ
             in.readUTF(),
             in.readBoolean(),
             DataFormatTools.readNullableText(in),
-            Collections.singletonMap("artworkUrl", DataFormatTools.readNullableText(in))
+            ThumbnailTools.getAsMetadata(Objects.requireNonNull(DataFormatTools.readNullableText(in)))
     );
 
     byte[] encodedTrack = new byte[in.readInt()];
