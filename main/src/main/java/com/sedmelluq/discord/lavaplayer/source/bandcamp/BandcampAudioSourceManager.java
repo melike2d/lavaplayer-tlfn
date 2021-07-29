@@ -41,7 +41,7 @@ import static com.sedmelluq.discord.lavaplayer.tools.FriendlyException.Severity.
  */
 public class BandcampAudioSourceManager implements AudioSourceManager, HttpConfigurable {
   private static final String URL_REGEX = "^(https?://(?:[^.]+\\.|)bandcamp\\.com)/(track|album)/([a-zA-Z0-9-_]+)/?(?:\\?.*|)$";
-  private static final String ARTWORK_URL_FORMAT = "https://f4.bcbits.com/img/a%s_9.jpg";
+  private static final String ARTWORK_URL_FORMAT = "https://f4.bcbits.com/img/a%s_0.jpg";
   private static final Pattern urlRegex = Pattern.compile(URL_REGEX);
 
   private final HttpInterfaceManager httpInterfaceManager;
@@ -119,7 +119,7 @@ public class BandcampAudioSourceManager implements AudioSourceManager, HttpConfi
         bandUrl + trackInfo.get("title_link").text(),
         false,
         trackPageUrl,
-            Collections.singletonMap("artworkUrl", artworkUrl)
+        Collections.singletonMap("artworkUrl", artworkUrl)
     ), this);
   }
 
