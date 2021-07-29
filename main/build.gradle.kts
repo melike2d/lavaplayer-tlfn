@@ -4,7 +4,7 @@ plugins {
   `java-library`
   groovy
   `maven-publish`
-    kotlin("jvm") version "1.5.0"
+    kotlin("jvm") version "1.5.21"
 }
 
 val moduleName = "lavaplayer"

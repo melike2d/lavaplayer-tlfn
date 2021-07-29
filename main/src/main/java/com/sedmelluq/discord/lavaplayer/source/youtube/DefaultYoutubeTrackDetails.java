@@ -5,10 +5,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.format.LegacyDashMpdForma
 import com.sedmelluq.discord.lavaplayer.source.youtube.format.LegacyStreamMapFormatsExtractor;
 import com.sedmelluq.discord.lavaplayer.source.youtube.format.StreamingDataFormatsExtractor;
 import com.sedmelluq.discord.lavaplayer.source.youtube.format.YoutubeTrackFormatExtractor;
-import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser;
-import com.sedmelluq.discord.lavaplayer.tools.Units;
+import com.sedmelluq.discord.lavaplayer.tools.*;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 
@@ -101,18 +98,7 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
             videoDetails.get("lengthSeconds")
     );
 
-    Optional<JsonBrowser> thumbnail = videoDetails.get("thumbnail").get("thumbnails").values()
-            .stream()
-            .max((t1, t2) -> {
-              long t1Sum = t1.get("width").asLong(0L) + t1.get("height").asLong(0L);
-              long t2Sum = t2.get("width").asLong(0L) + t2.get("height").asLong(0L);
-              return Long.compare(t1Sum, t2Sum);
-            });
-    String artwork;
-    if (thumbnail.isPresent())
-      artwork = thumbnail.get().get("url").text();
-    else
-      artwork = String.format("https://img.youtube.com/vi/%s/0.jpg", videoId);
+    String artwork = ThumbnailTools.extractYouTube(videoDetails, videoId);
 
     return buildTrackInfo(
             videoId,
@@ -134,18 +120,7 @@ public class DefaultYoutubeTrackDetails implements YoutubeTrackDetails {
             args.get("length_seconds")
     );
 
-    Optional<JsonBrowser> thumbnail = args.get("thumbnail").get("thumbnails").values()
-            .stream()
-            .max((t1, t2) -> {
-              long t1Sum = t1.get("width").asLong(0L) + t1.get("height").asLong(0L);
-              long t2Sum = t2.get("width").asLong(0L) + t2.get("height").asLong(0L);
-              return Long.compare(t1Sum, t2Sum);
-            });
-    String artwork;
-    if (thumbnail.isPresent())
-      artwork = thumbnail.get().get("url").text();
-    else
-      artwork = String.format("https://img.youtube.com/vi/%s/0.jpg", videoId);
+    String artwork = ThumbnailTools.extractYouTube(args, videoId);
 
     return buildTrackInfo(
             videoId,

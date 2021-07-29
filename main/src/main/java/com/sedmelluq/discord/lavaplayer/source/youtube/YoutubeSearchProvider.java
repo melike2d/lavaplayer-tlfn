@@ -3,6 +3,7 @@ package com.sedmelluq.discord.lavaplayer.source.youtube;
 import com.sedmelluq.discord.lavaplayer.tools.DataFormatTools;
 import com.sedmelluq.discord.lavaplayer.tools.ExceptionTools;
 import com.sedmelluq.discord.lavaplayer.tools.JsonBrowser;
+import com.sedmelluq.discord.lavaplayer.tools.ThumbnailTools;
 import com.sedmelluq.discord.lavaplayer.tools.http.ExtendedHttpConfigurable;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpClientTools;
 import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
@@ -182,19 +183,7 @@ public class YoutubeSearchProvider implements YoutubeSearchResultLoader {
     String lengthText = renderer.get("lengthText").get("simpleText").text();
     boolean isStream = lengthText == null;
     long duration = isStream ? LIVE_STREAM_DURATION : DataFormatTools.durationTextToMillis(lengthText);
-
-    Optional<JsonBrowser> thumbnail = renderer.get("thumbnail").get("thumbnails").values()
-            .stream()
-            .max((t1, t2) -> {
-              long t1Sum = t1.get("width").asLong(0L) + t1.get("height").asLong(0L);
-              long t2Sum = t2.get("width").asLong(0L) + t2.get("height").asLong(0L);
-              return Long.compare(t1Sum, t2Sum);
-            });
-    String artwork;
-    if (thumbnail.isPresent())
-      artwork = thumbnail.get().get("url").text();
-    else
-      artwork = String.format("https://img.youtube.com/vi/%s/0.jpg", videoId);
+    final String artwork = ThumbnailTools.extractYouTube(renderer, videoId);
 
     AudioTrackInfo info = new AudioTrackInfo(
             title, author, duration, videoId, isStream,
