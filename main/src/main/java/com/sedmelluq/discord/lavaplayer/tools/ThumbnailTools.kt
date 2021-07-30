@@ -4,10 +4,22 @@ object ThumbnailTools {
     @JvmStatic
     fun extractYouTube(jsonBrowser: JsonBrowser, videoId: String): String {
         val thumbnails = jsonBrowser.get("thumbnail").get("thumbnails").values()
-        val thumbnail = thumbnails.maxByOrNull {
-            it.get("width").asLong(0) + it.get("height").asLong(0)
-        } ?: return "https://img.youtube.com/vi/$videoId/0.jpg"
-        return thumbnail.get("url").text()
+        return thumbnails.maxByOrNull {
+            it.get("width").asLong(0) * it.get("height").asLong(0)
+        }?.get("url")?.text() ?: "https://img.youtube.com/vi/$videoId/0.jpg"
+    }
+
+    @JvmStatic
+    fun extractYouTubeMusic(jsonBrowser: JsonBrowser, videoId: String): String {
+        val thumbnails = jsonBrowser.get("musicResponsiveListItemRenderer")
+            .get("thumbnail")
+            .get("musicThumbnailRenderer")
+            .get("thumbnail")
+            .get("thumbnails")
+            .values()
+        return thumbnails?.maxByOrNull {
+            it.get("width").asLong(0) * it.get("height").asLong(0)
+        }?.get("url")?.text() ?: "https://img.youtube.com/vi/$videoId/0.jpg"
     }
 
     @JvmStatic

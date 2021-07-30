@@ -8,19 +8,26 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 fun main() {
     val playerManager = DefaultAudioPlayerManager()
     AudioSourceManagers.registerRemoteSources(playerManager)
-    playerManager.loadItem("https://sallyspitz.bandcamp.com/track/unchained", object : AudioLoadResultHandler {
+    val query = "ytmsearch:twocolors Never Done This"
+    playerManager.loadItem(query, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
             println(track.info.title)
             println(track.info.uri)
+            println(track.duration)
             println(track.info.artworkUrl)
         }
 
         override fun playlistLoaded(playlist: AudioPlaylist) {
-            val track = playlist.tracks.firstOrNull()
+            playlist.tracks.firstOrNull()
                 ?: return println("Empty playlist received")
-            println(track.info.title)
-            println(track.info.uri)
-            println(track.info.artworkUrl)
+            for (track in playlist.tracks) {
+                println(track.info.title)
+                println(track.info.author)
+                println(track.info.uri)
+                println(track.duration)
+                println(track.info.artworkUrl)
+                println("-----")
+            }
         }
 
         override fun noMatches() {
