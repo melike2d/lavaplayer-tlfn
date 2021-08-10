@@ -8,7 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 fun main() {
     val playerManager = DefaultAudioPlayerManager()
     AudioSourceManagers.registerRemoteSources(playerManager)
-    val query = "ytsearch:Ed Sheeran Shape Of You"
+    val query = "https://soundcloud.app.goo.gl/Zv4azcTV2Ef9FnUr8"
     playerManager.loadItem(query, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
             println(track.info.title)
