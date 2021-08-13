@@ -26,5 +26,7 @@ class StreamableAudioTrack(
         }
     }
 
+    override fun makeShallowClone() = StreamableAudioTrack(trackInfo, sourceManager)
+
     override fun getSourceManager() = this.sourceManager
 }
