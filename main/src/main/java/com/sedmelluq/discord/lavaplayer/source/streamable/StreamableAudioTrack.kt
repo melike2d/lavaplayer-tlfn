@@ -25,9 +25,9 @@ class StreamableAudioTrack(
             log.debug("Loading Streamable track page from URL: {}", trackInfo.uri)
             val trackUrl = getTrackMediaUrl(httpInterface)
             log.debug("Starting streamable track from URL: {}", trackUrl)
-            PersistentHttpStream(
-                httpInterface, URI(trackUrl), null
-            ).use { inputStream -> processDelegate(MpegAudioTrack(trackInfo, inputStream), localExecutor) }
+            PersistentHttpStream(httpInterface, URI(trackUrl), null).use { inputStream ->
+                processDelegate(MpegAudioTrack(trackInfo, inputStream), localExecutor)
+            }
         }
     }
 
@@ -39,7 +39,7 @@ class StreamableAudioTrack(
                 StandardCharsets.UTF_8
             )
             val document = Jsoup.parse(responseText)
-            return document.selectFirst("meta[property=og:url]").attr("content")
+            return document.selectFirst("meta[property=og:video:secure_url]").attr("content")
         }
     }
 
