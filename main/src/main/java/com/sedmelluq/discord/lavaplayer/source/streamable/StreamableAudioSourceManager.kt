@@ -87,8 +87,7 @@ class StreamableAudioSourceManager : HttpConfigurable, AudioSourceManager {
                     .setLength(duration)
                     .setIdentifier(data.attr("data-shortcode"))
                     .setTitle(data.attr("data-title"))
-                    .setMetadata(
-                        getAsMetadata(artwork))
+                    .setMetadata(getAsMetadata(artwork))
                     .build()
                 return decodeTrack(trackInfo, null)
             }
