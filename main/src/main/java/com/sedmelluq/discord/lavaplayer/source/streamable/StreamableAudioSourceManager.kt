@@ -81,13 +81,14 @@ class StreamableAudioSourceManager : HttpConfigurable, AudioSourceManager {
                 val duration = ceil(data.attr("data-duration").toDouble()).toLong() * 1000L
                 val artwork = document.selectFirst("meta[property=og:image]").attr("content")
                 val trackInfo = AudioTrackInfoBuilder.empty()
-                    .setUri(document.selectFirst("meta[property=og:url]").attr("content"))
+                    .setUri(reference.identifier)
                     .setAuthor("Unknown")
                     .setIsStream(false)
                     .setLength(duration)
                     .setIdentifier(data.attr("data-shortcode"))
                     .setTitle(data.attr("data-title"))
-                    .setMetadata(getAsMetadata(artwork))
+                    .setMetadata(
+                        getAsMetadata(artwork))
                     .build()
                 return decodeTrack(trackInfo, null)
             }
