@@ -8,13 +8,16 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 fun main() {
     val playerManager = DefaultAudioPlayerManager()
     AudioSourceManagers.registerRemoteSources(playerManager)
-    val query = "https://soundcloud.app.goo.gl/Zv4azcTV2Ef9FnUr8"
+    val query = "https://streamable.com/hjhijr"
     playerManager.loadItem(query, object : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
+            println(track::class.qualifiedName)
+            println(track.identifier)
             println(track.info.title)
             println(track.info.uri)
-            println(track.duration)
+            println(track.info.length)
             println(track.info.artworkUrl)
+            println(track.sourceManager)
         }
 
         override fun playlistLoaded(playlist: AudioPlaylist) {

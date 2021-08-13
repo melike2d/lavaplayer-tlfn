@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.streamable.StreamableAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
@@ -38,6 +39,7 @@ public class AudioSourceManagers {
     playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
     playerManager.registerSourceManager(new BeamAudioSourceManager());
     playerManager.registerSourceManager(new GetyarnAudioSourceManager());
+    playerManager.registerSourceManager(new StreamableAudioSourceManager());
     playerManager.registerSourceManager(new HttpAudioSourceManager(containerRegistry));
   }
 
