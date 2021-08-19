@@ -10,7 +10,7 @@ package com.sedmelluq.discord.lavaplayer.track
  * @param uri URL of the track, or local path to the file.
  * @param metadata Additional metadata of the track.
  */
-data class AudioTrackInfo(
+open class AudioTrackInfo(
     @JvmField val title: String,
     @JvmField val author: String,
     @JvmField val length: Long,
@@ -25,4 +25,8 @@ data class AudioTrackInfo(
     val artworkUrl: String?
         get() =
             metadata?.get("artworkUrl")
+
+    override fun toString(): String {
+        return "AudioTrackInfo(title=\"$title\", author=\"$author\", length=$length, identifier=\"$identifier\", isStream=$isStream, uri=\"$uri\", metadata=$metadata)"
+    }
 }

@@ -10,6 +10,10 @@ plugins {
 val moduleName = "lavaplayer"
 version = "1.3.78"
 
+repositories {
+  mavenCentral()
+}
+
 dependencies {
   api("com.sedmelluq:lava-common:1.1.2")
   implementation("com.sedmelluq:lavaplayer-natives:1.3.14")
@@ -60,14 +64,8 @@ publishing {
     }
   }
 }
-repositories {
-    mavenCentral()
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+
+tasks.withType<KotlinCompile> {
+  kotlinOptions.jvmTarget = "16"
+  kotlinOptions.freeCompilerArgs += "-Xjvm-enable-preview"
 }
