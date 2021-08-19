@@ -5,4 +5,4 @@ before_install:
     - sdk use java 16.0.2-zulu
 
 install:
-  - ./gradlew clean :main:build :main:publishToMavenLocal
+  - ./gradlew clean :main:build :main:publishToMavenLocal --enable-preview
