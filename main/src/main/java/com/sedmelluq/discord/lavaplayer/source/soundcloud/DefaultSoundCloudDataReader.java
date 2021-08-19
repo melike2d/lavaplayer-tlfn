@@ -95,8 +95,12 @@ public class DefaultSoundCloudDataReader implements SoundCloudDataReader {
   }
 
   protected JsonBrowser findEntryOfKind(JsonBrowser data, String kind) {
-    if (kind.equals(data.get("kind").text())) {
-      return data;
+    for (JsonBrowser value : data.values()) {
+      for (JsonBrowser entry : value.get("data").values()) {
+        if (entry.isMap() && kind.equals(entry.get("kind").text())) {
+          return entry;
+        }
+      }
     }
 
     return null;
